@@ -1,3 +1,5 @@
+#Para ejecutarlo en Colab con enlace Github generado
+
 !git clone https://github.com/diego-555-dmg/causal-discovery-daca
 %cd causal-discovery-daca
 !pip install -r requirements.txt
