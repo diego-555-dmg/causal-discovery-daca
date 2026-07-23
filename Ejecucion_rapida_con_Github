@@ -1,0 +1,12 @@
+!git clone https://github.com/diego-555-dmg/causal-discovery-daca
+%cd causal-discovery-daca
+!pip install -r requirements.txt
+
+!python tests/test_smoke.py
+
+%cd src
+!python run_sachs.py
+
+!python run_experiment.py --config full
+!python make_figures.py
+
