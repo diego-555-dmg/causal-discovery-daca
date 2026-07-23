@@ -1,0 +1,11 @@
+# Descubrimiento causal: DAG-GNN vs baselines no neuronales
+# Probado con Python 3.10. Para CPU basta `pip install -r requirements.txt`.
+# (Para GPU, instalar la rueda de torch correspondiente a tu CUDA.)
+numpy>=1.24,<2.0
+scipy>=1.10
+pandas>=1.5
+networkx>=3.0
+scikit-learn>=1.2
+matplotlib>=3.6
+causal-learn>=0.1.3
+torch>=1.13,<2.3
