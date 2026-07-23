@@ -1,4 +1,4 @@
-# ¿Mejoras reales o instrumentales? DAG-GNN frente a baselines no neuronales
+# ¿Descubrimiento causal neuronal a prueba: ¿Ventajas reales del DAG-GNN frente a baselines no neuronales?
 
 Evaluación crítica del descubrimiento causal por optimización continua y redes
 neuronales (**DAG-GNN**) frente a baselines no neuronales (**NOTEARS, PC, GES**) y
