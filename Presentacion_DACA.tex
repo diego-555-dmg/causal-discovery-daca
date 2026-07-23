@@ -1,0 +1,386 @@
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[10pt,aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+
+\usetheme{metropolis}
+\metroset{numbering=fraction, progressbar=frametitle, block=fill, sectionpage=none}
+
+% ---------- Paleta ----------
+\definecolor{ink}{HTML}{16213E}      % navy profundo
+\definecolor{ink2}{HTML}{1B2A4A}
+\definecolor{teal}{HTML}{1FA6A0}     % acento principal
+\definecolor{coral}{HTML}{E8663D}    % acento cálido (cifras clave)
+\definecolor{paper}{HTML}{FAFAFC}    % fondo casi blanco
+\definecolor{mist}{HTML}{EDF1F5}
+
+% ---------- Colores del tema ----------
+\setbeamercolor{normal text}{fg=ink, bg=paper}
+\setbeamercolor{background canvas}{bg=paper}
+\setbeamercolor{frametitle}{fg=paper, bg=ink}
+\setbeamercolor{progress bar}{fg=teal, bg=mist}
+\setbeamercolor{title separator}{fg=teal}
+\setbeamercolor{alerted text}{fg=coral}
+\setbeamercolor{example text}{fg=teal}
+\setbeamercolor{block title}{fg=paper, bg=teal!88!black}
+\setbeamercolor{block body}{fg=ink, bg=teal!8}
+\setbeamercolor{block title alerted}{fg=paper, bg=coral}
+\setbeamercolor{block body alerted}{fg=ink, bg=coral!10}
+\setbeamercolor{standout}{fg=paper, bg=ink}
+\setbeamercolor{itemize item}{fg=teal}
+\setbeamercolor{itemize subitem}{fg=coral}
+\setbeamercolor{enumerate item}{fg=teal}
+\setbeamerfont{frametitle}{series=\bfseries}
+\setbeamertemplate{frametitle}[default][left,leftskip=0.4em]
+
+% ---------- Atajos ----------
+\newcommand{\hl}[1]{\textcolor{teal}{\textbf{#1}}}
+\newcommand{\num}[1]{\textcolor{coral}{\textbf{#1}}}
+\newtcolorbox{key}{enhanced, colback=teal!7, colframe=teal!80!black,
+  boxrule=0.8pt, arc=4pt, left=7pt, right=7pt, top=5pt, bottom=5pt,
+  drop fuzzy shadow=teal!30}
+\newtcolorbox{warn}{enhanced, colback=coral!8, colframe=coral!85!black,
+  boxrule=0.8pt, arc=4pt, left=7pt, right=7pt, top=5pt, bottom=5pt}
+
+\title{Descubrimiento causal neuronal a prueba}
+\subtitle{¿Ventajas reales del DAG-GNN frente a baselines no neuronales?}
+\author{Diego Alonso Córdova Ayala}
+\institute{\texttt{diego.cordova@dmg-pe.com} \; $\cdot$ \; Curso de Redes Neuronales y Deep Learning}
+\date{}
+\titlegraphic{}
+
+\begin{document}
+
+% ---------- 1. Título (diseño a medida) ----------
+{\setbeamercolor{background canvas}{bg=ink}
+\begin{frame}[plain]
+  \vspace{1.4em}
+  {\color{teal}\rule{\textwidth}{1.4pt}}\par
+  \vspace{12pt}
+  {\color{paper}\bfseries\LARGE Descubrimiento causal neuronal a prueba\par}
+  \vspace{6pt}
+  {\color{teal}\large ¿Ventajas reales del DAG-GNN frente a baselines no neuronales?\par}
+  \vspace{8pt}
+  {\color{teal!55!ink}\rule{\textwidth}{0.6pt}}\par
+  \vspace{14pt}
+  {\color{paper}\normalsize Diego Alonso Córdova Ayala\par}
+  \vspace{3pt}
+  {\color{mist}\footnotesize \texttt{diego.cordova@dmg-pe.com}\; $\cdot$\; Curso de Redes Neuronales y Deep Learning\par}
+  \vfill
+  \begin{center}
+  \begin{tcolorbox}[width=0.92\textwidth, colback=ink2, colframe=teal,
+    boxrule=1pt, arc=5pt, left=9pt, right=9pt, top=6pt, bottom=6pt, coltext=paper]
+  \footnotesize\centering \textcolor{teal}{\textbf{Tesis.}} En los \emph{benchmarks}
+  sintéticos, la ventaja de DAG-GNN es en gran parte \textcolor{coral}{\textbf{instrumental}}
+  (dependiente de la escala), no una mejor recuperación causal.
+  \end{tcolorbox}
+  \end{center}
+  \vspace{0.6em}
+\end{frame}}
+
+% ---------- 2. Motivación ----------
+\begin{frame}{Motivación: descubrimiento causal por Deep Learning}
+  \begin{columns}[T]
+  \begin{column}{0.58\textwidth}
+  \begin{itemize}
+    \item \textbf{Descubrimiento causal:} inferir el grafo dirigido acíclico (DAG)
+          que genera los datos, no solo correlaciones.
+    \item Reformulado como \textbf{optimización continua}:
+          \begin{itemize}\footnotesize
+            \item NOTEARS (lineal) y \hl{DAG-GNN} (red neuronal en grafo).
+          \end{itemize}
+    \item Prometen capturar \textbf{no linealidad} y superar a los clásicos
+          (PC, GES).
+  \end{itemize}
+  \end{column}
+  \begin{column}{0.4\textwidth}
+  \begin{key}
+  \centering
+  $X_j = f_j(\mathrm{PA}_j,\, U_j)$\\[3pt]
+  \scriptsize cada variable $=$ función de sus \emph{padres} $+$ ruido
+  \end{key}
+  \vspace{4pt}
+  \centering\footnotesize\textit{¿La flexibilidad neuronal realmente ayuda?}
+  \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------- 3. Varsortability ----------
+\begin{frame}{La trampa: \emph{varsortability} (Reisach et al., 2021)}
+  \begin{itemize}
+    \item En los grafos sintéticos habituales, la \textbf{varianza marginal crece}
+          a lo largo del orden causal.
+    \item Ordenar por varianza ya ``filtra'' el orden causal: un método trivial
+          (\hl{sortnregress}) iguala a los sofisticados.
+    \item \alert{Sospecha:} el desempeño no mide razonamiento causal, sino
+          sensibilidad a la \textbf{escala}.
+  \end{itemize}
+  \vfill
+  \begin{key}
+  \centering
+  \textbf{Varsortability} $v\in[0,1]$:\quad
+  $v=\num{1}\Rightarrow$ la varianza revela el orden causal \quad$\bullet$\quad
+  $v=\num{0.5}\Rightarrow$ azar
+  \end{key}
+\end{frame}
+
+% ---------- 4. Pregunta ----------
+\begin{frame}{Pregunta de investigación y contribución}
+  \begin{block}{Pregunta}
+  ¿\emph{Bajo qué condiciones de los datos} la flexibilidad de DAG-GNN produce
+  mejoras \textbf{reales} sobre baselines no neuronales?
+  \end{block}
+  \textbf{Contribución --- un protocolo experimental controlado que:}
+  \begin{enumerate}
+    \item \textbf{varía la varsortability} vía la política de escalas de ruido;
+    \item \textbf{separa} \emph{esqueleto} de \emph{orientación};
+    \item contrasta datos \textbf{crudos vs.\ estandarizados};
+    \item se \textbf{valida en datos reales} (red de proteínas de Sachs, 2005).
+  \end{enumerate}
+  \centering\footnotesize\textcolor{ink!55}{Implementación reproducible que mejora el código de Reisach et al.}
+\end{frame}
+
+% ---------- 5. Notación I ----------
+\begin{frame}{Notación I: modelo causal, DAG y lo identificable}
+  \begin{itemize}
+    \item \textbf{Modelo Causal Estructural (MCE):} $\langle U,V,F,P(U)\rangle$;
+          ecuaciones $X_j=f_j(\mathrm{PA}_j,U_j)\Rightarrow$ un \textbf{DAG}.
+    \item \textbf{Límite de identificabilidad:} con datos observacionales
+          (Markov $+$ fidelidad) solo se identifica la \textbf{clase de equivalencia
+          de Markov} $=$ un \hl{CPDAG}.
+  \end{itemize}
+  \vfill
+  \begin{key}
+  \small Dos DAGs con el \textbf{mismo esqueleto} y las mismas \textbf{v-estructuras}
+  ($a\!\to\!c\!\leftarrow\!b$) son \emph{indistinguibles} de los datos.
+  $\Rightarrow$ separamos \hl{esqueleto} (¿hay arista?) de \hl{orientación} (¿en qué sentido?).
+  \end{key}
+\end{frame}
+
+% ---------- 6. Notación II ----------
+\begin{frame}{Notación II: datos y definición de \emph{varsortability}}
+  \begin{columns}[T]
+  \begin{column}{0.48\textwidth}
+  \textbf{SEM lineal (ANM):}
+  \[ X = X\,W + E \]
+  \footnotesize $W$: pesos $i\!\to\!j$;\; $E$: ruido independiente.
+  \normalsize\\[6pt]
+  \textbf{Política de escalas del ruido} $\Rightarrow$ controla $v$:
+  \begin{itemize}\footnotesize
+    \item \emph{increasing}: $\mathrm{Var}$ crece con la profundidad $\to v\!\to\!1$
+    \item \emph{equal} / \emph{random}
+  \end{itemize}
+  \end{column}
+  \begin{column}{0.52\textwidth}
+  \textbf{Varsortability:}
+  \[ v=\frac{\displaystyle\sum_{k=1}^{d-1}\sum_{i\to j\in E^{k}}
+      \mathbf{1}\!\left[\tfrac{\mathrm{Var}(X_j)}{\mathrm{Var}(X_i)}>1\right]}
+      {\displaystyle\sum_{k=1}^{d-1}\sum_{i\to j\in E^{k}} 1} \]
+  \footnotesize (empates $=\tfrac12$). Acuerdo entre el orden de varianzas y el
+  orden causal a lo largo de caminos $E^k$.
+  \end{column}
+  \end{columns}
+  \vspace{2pt}
+  \begin{warn}
+  \centering\small \textbf{Estandarizar} (media 0, var.\ 1) $\Rightarrow v=\num{0.5}$: se borra la señal de escala.
+  \end{warn}
+\end{frame}
+
+% ---------- 7. Métodos ----------
+\begin{frame}{Métodos comparados (1 principal $+$ 4 baselines)}
+  \small
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.5cm} p{8.4cm}@{}}
+  \toprule
+  \hl{sortnregress} & baseline \emph{trivial}: ordena por varianza y regresa (Lasso-BIC). \\[2pt]
+  \hl{NOTEARS} & opt.\ continua lineal con $h(W)=\mathrm{tr}(e^{W\circ W})-d=0$. \\[2pt]
+  \hl{DAG-GNN} & VAE en grafo; $h(A)=\mathrm{tr}\!\big[(I+\tfrac1d A\!\circ\!A)^d\big]-d=0$. \\[2pt]
+  \hl{PC / GES} & clásicos (restricciones / \emph{score}); \textbf{invariantes a escala} $\to$ CPDAG. \\
+  \bottomrule
+  \end{tabular}
+  \vfill
+  \begin{key}
+  \footnotesize $h(\cdot)=0 \iff$ la matriz de pesos codifica un \textbf{DAG}.
+  DAG-GNN lo optimiza con \textbf{Lagrangiano aumentado}:
+  $\min\ \mathrm{ELBO} + \alpha\,h + \tfrac{\rho}{2}h^2$. Las MLP por nodo aportan la
+  ``flexibilidad'' cuyo beneficio \emph{real} evaluamos.
+  \end{key}
+\end{frame}
+
+% ---------- 8. Métricas ----------
+\begin{frame}{Métricas: separar esqueleto de orientación}
+  \begin{columns}[T]
+  \begin{column}{0.62\textwidth}
+  \begin{itemize}
+    \item \hl{SHD}: aristas faltantes $+$ sobrantes $+$ invertidas.
+          \textcolor{ink!55}{Menor es mejor.}
+    \item \hl{F1 de esqueleto:} $F_1=\dfrac{2PR}{P+R}$ sobre aristas
+          \emph{no dirigidas}.
+    \item \hl{Precisión de orientación:} fracción bien orientada entre las
+          detectadas (no dirigida del CPDAG $=0.5$).
+  \end{itemize}
+  \end{column}
+  \begin{column}{0.38\textwidth}
+  \begin{warn}
+  \footnotesize \textbf{Por qué separar:} un método puede acertar el \emph{esqueleto}
+  y aún así \emph{orientar al azar}. El SHD solo no lo revela.
+  \end{warn}
+  \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------- 9. Diseño ----------
+\begin{frame}{Diseño experimental}
+  \begin{itemize}
+    \item DAGs Erdős–Rényi, $d=12$ nodos, $\approx 15$ aristas; $n=1000$.
+    \item \hl{18 condiciones} $=$ 3 políticas ($v$) $\times$ 2 escalas $\times$ 3 semillas.
+    \item Cada condición: los 5 métodos $\to$ SHD, F1 esqueleto, orientación.
+  \end{itemize}
+  \vfill
+  \centering
+  \begin{tcolorbox}[enhanced, width=0.9\textwidth, colback=mist, colframe=ink,
+    boxrule=0.6pt, arc=4pt, left=8pt, right=8pt, top=6pt, bottom=6pt]
+  \small
+  \begin{tabular}{@{}c c c@{}}
+   & \textcolor{teal}{\textbf{crudo (raw)}} & \textcolor{coral}{\textbf{estandarizado (std)}} \\
+  \midrule
+  varsortability & $\approx 1$ & $=0.5$ \\
+  \emph{¿qué esperamos?} & métodos de escala ``ganan'' & se cae la ventaja de escala \\
+  \end{tabular}
+  \end{tcolorbox}
+
+  \vspace{4pt}
+  {\footnotesize\textcolor{ink!55}{Reproducibilidad: semillas, hiperparámetros, hardware y versiones documentados.}}
+\end{frame}
+
+% ---------- 10. Tabla ----------
+\begin{frame}{Resultados (sintéticos): la ventaja es instrumental}
+  \centering \small
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{@{}l l c c c c@{}}
+  \toprule
+  Escala & Método & $v$ & SHD$\downarrow$ & F1$_{\text{esq}}$ & Orient. \\
+  \midrule
+  \textcolor{teal}{crudo} & sortnregress & 1.0 & \num{0.22} & 0.99 & \num{1.00} \\
+  \textcolor{teal}{crudo} & NOTEARS      & 1.0 & 0.44 & 0.99 & 0.99 \\
+  \textcolor{teal}{crudo} & DAG-GNN      & 1.0 & 5.33 & 0.78 & 0.98 \\
+  \textcolor{teal}{crudo} & PC / GES     & 1.0 & 6.9 / 7.8 & 0.97 / 0.93 & 0.76 / 0.73 \\
+  \midrule
+  \textcolor{coral}{estand.} & sortnregress & 0.5 & 17.6 & 0.73 & 0.53 \\
+  \textcolor{coral}{estand.} & NOTEARS      & 0.5 & 11.1 & 0.75 & 0.50 \\
+  \textcolor{coral}{estand.} & DAG-GNN      & 0.5 & 13.0 & 0.20 & 0.80$^{\dagger}$ \\
+  \rowcolor{teal!14}
+  \textcolor{coral}{estand.} & \textbf{PC / GES} & 0.5 & \textbf{6.9 / 7.8} & \textbf{0.97 / 0.93} & \textbf{0.76 / 0.73} \\
+  \bottomrule
+  \end{tabular}
+  \\[4pt]
+  \footnotesize $^{\dagger}$ sobre el $\sim\!20\%$ de aristas que conserva; no indicativa.\\[2pt]
+  \alert{\textbf{Al estandarizar, PC y GES pasan a ser los mejores.}}
+\end{frame}
+
+% ---------- 11. Figura orientación ----------
+\begin{frame}{La orientación cae a azar al estandarizar}
+  \begin{columns}[c]
+  \begin{column}{0.6\textwidth}
+  \centering
+  \fbox{\includegraphics[width=\linewidth]{fig_orientation.png}}
+  \end{column}
+  \begin{column}{0.4\textwidth}
+  \footnotesize
+  \begin{itemize}
+    \item \textcolor{teal}{\textbf{Crudo}}: NOTEARS/DAG-GNN/sortnregress orientan casi perfecto.
+    \item \textcolor{coral}{\textbf{Estandarizado}}: caen a $\approx 0.5$ (azar).
+    \item \hl{PC y GES} estables (invariantes a escala).
+  \end{itemize}
+  \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------- 12. Esqueleto vs orientación ----------
+\begin{frame}{Separar esqueleto y orientación es esclarecedor}
+  \begin{columns}[c]
+  \begin{column}{0.58\textwidth}
+  \centering
+  \fbox{\includegraphics[width=\linewidth]{fig_skeleton_vs_orientation.png}}
+  \end{column}
+  \begin{column}{0.42\textwidth}
+  \footnotesize
+  \begin{itemize}
+    \item En std el \textbf{esqueleto} (verde) sobrevive en parte\ldots
+    \item \ldots pero la \textbf{orientación} (rojo) colapsa al azar.
+    \item La ``orientación'' $0.80$ de DAG-GNN es \emph{engañosa}: pocas aristas (SHD$=\num{13}$).
+    \item \textbf{Costo:} DAG-GNN $\sim$\num{5.8}\,s vs.\ 0.06--0.34\,s; el más caro, no el más preciso.
+  \end{itemize}
+  \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------- 13. Sachs ----------
+\begin{frame}{Validación en datos reales: red de proteínas de Sachs (2005)}
+  \begin{columns}[T]
+  \begin{column}{0.5\textwidth}
+  \centering\scriptsize
+  \renewcommand{\arraystretch}{1.1}
+  \begin{tabular}{@{}l c c c@{}}
+  \toprule
+  Método (escala) & SHD$\downarrow$ & F1$_{\text{esq}}$ & Orient. \\
+  \midrule
+  NOTEARS (crudo) & 19 & 0.67 & 0.54 \\
+  NOTEARS (std)   & 15 & 0.38 & 0.50 \\
+  \rowcolor{teal!14}
+  \textbf{PC} (crudo$=$std) & \textbf{17} & \textbf{0.62} & \textbf{0.38} \\
+  GES (crudo$=$std) & 17 & 0.58 & 0.36 \\
+  \bottomrule
+  \end{tabular}
+  \\[5pt]
+  \fbox{\includegraphics[width=0.99\linewidth]{fig_sachs.png}}
+  \end{column}
+  \begin{column}{0.5\textwidth}
+  \footnotesize
+  \begin{itemize}
+    \item Datos \textbf{reales}, $d=11$ proteínas; \emph{ground truth} de consenso (17 aristas).
+    \item \hl{Varsortability real $=\num{0.59}$} (no $\approx 1$): \textbf{sin} señal de escala artificial.
+    \item \hl{PC y GES idénticos} en crudo y std $\Rightarrow$ invariancia confirmada.
+    \item Ningún método recupera bien la red (SHD 14--19).
+  \end{itemize}
+  \begin{warn}
+  \scriptsize\centering La superioridad ``sintética'' \textbf{no se transfiere} a datos reales.
+  \end{warn}
+  \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------- 14. Conclusiones (standout) ----------
+\begin{frame}{Conclusiones}
+  \begin{enumerate}
+    \item En \emph{benchmarks} ANM lineales, la superioridad de NOTEARS/DAG-GNN es
+          \hl{instrumental}: depende de una alta varsortability que un baseline
+          trivial también explota.
+    \item Al \textbf{estandarizar}, la ventaja se evapora; \hl{PC y GES} resultan preferibles.
+    \item En \textbf{datos reales} (Sachs, $v=\num{0.59}$) la ventaja no aparece.
+  \end{enumerate}
+  \vfill
+  \begin{block}{Recomendaciones metodológicas}
+  \footnotesize
+  (i) estandarizar como \textbf{control estándar}; (ii) reportar \textbf{esqueleto y
+  orientación por separado}; (iii) la evidencia \emph{no} respalda adoptar DAG-GNN
+  por su flexibilidad no lineal en este régimen.
+  \end{block}
+\end{frame}
+
+% ---------- 15. Cierre standout ----------
+{\setbeamercolor{background canvas}{bg=ink}
+\begin{frame}[standout]
+  \centering
+  {\Large La ventaja es \textcolor{coral}{\textbf{instrumental}}, no causal.}\\[10pt]
+  \small\textcolor{mist}{Gracias.}\\[4pt]
+  \footnotesize\texttt{diego.cordova@dmg-pe.com}\\[2pt]
+  \scriptsize\textcolor{teal}{Código en GitHub · README · reproducibilidad}
+\end{frame}}
+
+\end{document}
