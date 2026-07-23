@@ -8,7 +8,7 @@ al., NeurIPS 2021). El código parte del repositorio
 mejora y amplía para responder: *¿bajo qué condiciones de los datos la
 flexibilidad de DAG-GNN produce mejoras reales sobre baselines no neuronales?*
 
-Proyecto Final — *Introducción a Deep Learning* (Doctorado).
+Proyecto Final — *Redes Neuronales y Deep Learning".
 Autor: **Diego Alonso Córdova Ayala** · `diego.cordova@dmg-pe.com`
 
 ---
