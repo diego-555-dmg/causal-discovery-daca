@@ -1,4 +1,5 @@
-#Para ejecutarlo en Colab con enlace Github generado
+#Para ejecutarlo en Google Colab Research con enlace Github generado
+# colab.research.google.com
 
 !git clone https://github.com/diego-555-dmg/causal-discovery-daca
 %cd causal-discovery-daca
